@@ -1,9 +1,9 @@
 from find_best_opportunity import opportunities_pipeline
 
 
+def main():
 
-
-if __name__ == "__main__":
+# if __name__ == "__main__":
 
     start_date = "2024-11-07"
     #end_date = "2022-10-10"

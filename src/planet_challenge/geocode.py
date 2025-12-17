@@ -1,20 +1,12 @@
 #from geopy.geocoders import GoogleV3
-from geopy.geocoders import GoogleV3
+#from geopy.geocoders import GoogleV3
 import googlemaps
 
 import time
 import geopandas as gpd
-import pandas as pd
-from fiona.io import ZipMemoryFile
 
-import shapefile
-import pyproj
-from shapely.geometry import (Point, shape)
-from shapely.ops import transform
 
-import sys
-
-from gee_init import gee_init
+from shapely.geometry import (Point)
 
 ### TODO
 
@@ -58,13 +50,13 @@ from gee_init import gee_init
 
 
 
-# geolocator2 = GoogleV3(api_key="AIzaSyCpw_ThiNdXC9hFiSt0HeP7CMrIdzoY0II")
+# geolocator2 = GoogleV3(api_key="<XXX>")
 
 #location = geolocator.geocode("Berlin")
 
 
-# geolocator = GoogleV3(api_key="AIzaSyCpw_ThiNdXC9hFiSt0HeP7CMrIdzoY0II",
-#                     client_id="502611490729-hg6qtai34839pbkccmgcn3mdfaqvpdfg.apps.googleusercontent.com", 
+# geolocator = GoogleV3(api_key="<XXX>",
+#                     client_id="<XXX>", 
 #                     secret_key="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")
     
 
@@ -189,7 +181,7 @@ def extract_coords(cities_gdf):
 # print(gdf_geocoded)
 
 
-# gmaps = googlemaps.Client(key="AIzaSyCpw_ThiNdXC9hFiSt0HeP7CMrIdzoY0II")
+# gmaps = googlemaps.Client(key="<XXX>")
 
 # geolocator = gmaps.geocode('Coburg, Germany')
 

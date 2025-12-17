@@ -1,14 +1,14 @@
 import pandas as pd
 import geopandas as gpd
-import numpy as np
-from scipy.spatial.distance import cdist
+#import numpy as np
+#from scipy.spatial.distance import cdist
 from sqlalchemy import create_engine
 
 
-from pathlib import Path 
+#from pathlib import Path 
 from datetime import datetime, timedelta
-import time
-from collections import defaultdict
+#import time
+#from collections import defaultdict
 
 from weather_api_clouds import cloud_covers_pipeline
 

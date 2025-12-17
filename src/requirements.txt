@@ -1,0 +1,11 @@
+earthengine_api==1.5.24
+ee==0.2
+geopandas==1.0.1
+geopy==2.4.1
+googlemaps==4.10.0
+openmeteo_requests==1.7.4
+pandas==2.3.3
+requests_cache==1.2.1
+retry_requests==2.0.0
+Shapely==2.1.2
+SQLAlchemy==2.0.45
