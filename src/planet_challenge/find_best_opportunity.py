@@ -277,7 +277,7 @@ def opportunities_pipeline(start_date, window):
     opportunities_gdf_ordered.to_csv('./result/ordered_points_with_cities.csv')
 
 
-    connection_string = f"postgresql://docker:docker@35.242.217.121:5432/coburg_uhi"
+    connection_string = f"postgresql://${PGUSER}:${PGPASS}@${VM_IP}:5432/coburg_uhi"
     engine = create_engine(connection_string)
 
     opportunities_gdf_ordered.to_postgis(       ### XXX Upload GeoDataframe directly as a new table to my previously deployed Postgres with PostGIS database
