@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 #import time
 #from collections import defaultdict
 
-from weather_api_clouds import cloud_covers_pipeline
+from planet_challenge.weather_api_clouds import cloud_covers_pipeline
 
 
 

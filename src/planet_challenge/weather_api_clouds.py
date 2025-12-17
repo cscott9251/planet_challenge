@@ -8,7 +8,7 @@ from retry_requests import retry
 import datetime
 from datetime import timedelta, datetime
 
-from geocode import geocoded_cities_pipeline
+from planet_challenge.geocode import geocoded_cities_pipeline
 
 
 
