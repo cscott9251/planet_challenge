@@ -13,6 +13,47 @@ from datetime import datetime, timedelta
 from planet_challenge.weather_api_clouds import cloud_covers_pipeline
 
 
+"""
+This module takes the final cloud covers dataframe from weather_api_clouds.py and 
+searches for the best cities to image per day in two ways, sequentially:
+
+1. By cloud cover, by using the free Open Meteo weather API to retrieve cloud covers for
+all of the cities, and then finding the 8 smallest values for cloud cover per day in ascending order per day.
+Cloud covers dataframe and pipeline from weather_api_clouds.py.
+
+2. By geodesic proximity. Assuming the satellite moves from east to west, the easternmost city of the 8 cities
+given by the first step is selected as the starting city, and then the nearest city (in terms of geodesic distance)
+is selected as the next city to image, and so on until a route of 8 cities that are in consecutive geographical order
+(i.e. are more or less in a line in terms of their longitude, obviously with variation in latitude) is reached. 
+This is then repeated for the remaining 6 days until a full list of ordered cities is reached.
+
+The differet tasks are organised into functions with params, which are themselves chained via a main pipeline function for readability.
+
+The final dataframe is exported to CSV, to GeoJSON, as well as to my Postgres database on GCP (which I had already deployed for my UHI project).
+This was for the visualisation, testing different time periods for the cloud covers etc. I wanted to make sure that it was possible to quickly
+update my Map Series Atlas in QGIS with updated points for different time periods with minimal manual input. I connected my GCP Postgres database
+to QGIS, so that when I re-run the program, I just have to quickly refresh the Atlas in QGIS and the series and dynamic text elements will simply
+reference the new points. This saved having to manually import GeoJSON files etc. 
+
+
+Things to note:
+
+I've left some old, commented-out code instead of deleting it to show you my thought process. 
+
+I went through 2-3 different methods for performing the ordering, using different distance calculation methods / libraries etc. 
+When I looked at the points in QGIS I realised that using a simple nearest-neighbour calculation was resulting in imaging route switching direction, 
+i.e. going towards east for a few locations and then selecting a location that was actually back west.
+I realised that this was because the loop was simply selecting the nearest point with no accounting for direction or starting position. 
+So I changed the logic to specify a starting position and to use the geopy package to calculate the next nearest geodesic (instead of 2D) distance.
+Since the original Shapefile data was in EPSG:4326, which uses degrees as a unit, geodesic calculation is straightforward. 
+
+I wanted to use earthengine-api Python library to utilise Google Earth Engine Python functions, but I didn't have time to implement this, and I am relatively
+new to that Python library and to the API, how to find cloud covers for different AOIs, etc. 
+I have used GEE before, for my UHI project, to find matching summer/winter pairs of Landsat-2 and Sentinel-2 images,
+but my code on the GEE code editor, in JavaScript, didn't seem readily adaptable to this problem, and I felt more confident to start from scratch. 
+I would definitely like to implement this in the future!
+"""
+
 
 def identify_opportunities(cloud_df, start_date, window):
 
@@ -88,7 +129,7 @@ def identify_opportunities(cloud_df, start_date, window):
             opportunities_dict['geometry'].append(cloud_df.at[city_idx, 'geometry'])
             opportunities_dict['cloud_cover'].append(cloud_df.at[city_idx, date_i])
             opportunities_dict['pop_max'].append(cloud_df.at[city_idx, 'pop_max'])
-            opportunities_dict['row_order'].append(list_idx)
+            opportunities_dict['row_order'].append(list_idx)                        ## This is needed to record the order of imaging. 
 
     
     opprtunities_gdf_full = gpd.GeoDataFrame(opportunities_dict, crs="EPSG:4326")  # Can keep to using one GeoDataframe instead of one for each field(!). Ensure that originale Shapefile CRS is specified.
@@ -219,15 +260,17 @@ def order_nearest(opportunities_gdf_full):
 def opportunities_pipeline(start_date, window):
      
     cloud_df = cloud_covers_pipeline(start_date, window)
+
     print(cloud_df)
 
     opportunities_gdf = identify_opportunities(cloud_df, start_date, window)
-    opportunities_gdf = opportunities_gdf              
+    opportunities_gdf = opportunities_gdf 
+
     print(opportunities_gdf)
 
     opportunities_gdf_ordered = order_nearest(opportunities_gdf)
-
     opportunities_gdf_ordered['date'] = pd.to_datetime(opportunities_gdf_ordered['date']).dt.date
+
     print(opportunities_gdf_ordered)
 
     opportunities_gdf_ordered.to_file('./result/ordered_points_with_cities.geojson', driver="GeoJSON")

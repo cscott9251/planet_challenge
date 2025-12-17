@@ -8,17 +8,18 @@ import geopandas as gpd
 
 from shapely.geometry import (Point)
 
-### TODO
 
+"""
 
-################### FOR CLOUD COVER TRY OPEN METEO API
+This module loads the Shapefile from the URL given in the challenge brief into a GeoDataframe.
+It sorts the values by population, selects the 40 cities with the greatest populations,
+orders the GeoDataframe by the populations, and deletes the remaining cities.
 
+I originally included logic to use Google's Maps and Geocoding APIs to pass the names of the cities 
+to the API so get the lat/long, but then realised that these points are already part of the geometry 
+column of the Shapefile. 
 
-############# CAN USE GOOGLE WEATHER API FOR CLOUD COVER IN THE FUTURE OR OPEN-METEO FOR BOTH FORECAST AND HISTORICAL
-
-
-### TODO
-
+"""
 
 
 
@@ -139,7 +140,7 @@ def geocoded_cities_pipeline():
 
 
 
-### Below are functions that are no longer needed
+### XXX Below are functions that are no longer needed XXX
 
 ### I originally wanted to use Google's Geocoding API to get the long / lat of the cities by passing their name, but I then realised the coords were already in the Point Geometries
 

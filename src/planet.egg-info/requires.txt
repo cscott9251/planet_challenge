@@ -1,0 +1,12 @@
+SQLAlchemy
+Shapely
+fiona
+geopandas
+numpy
+openmeteo_requests
+pandas
+pyproj
+pyshp
+requests_cache
+retry_requests
+scipy
