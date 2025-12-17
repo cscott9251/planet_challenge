@@ -3,7 +3,7 @@ import geopandas as gpd
 #import numpy as np
 #from scipy.spatial.distance import cdist
 from sqlalchemy import create_engine
-
+from geopy.distance import geodesic
 
 #from pathlib import Path 
 from datetime import datetime, timedelta
@@ -94,6 +94,7 @@ def identify_opportunities(cloud_df, start_date, window):
     opprtunities_gdf_full = gpd.GeoDataFrame(opportunities_dict, crs="EPSG:4326")  # Can keep to using one GeoDataframe instead of one for each field(!). Ensure that originale Shapefile CRS is specified.
     #opprtunities_gdf_full = opprtunities_gdf_full.to_crs("EPSG:3857")               # And specify QGIS CRS. The reason I'm using 3857 is because the unit of 4326 is degrees, which was making things difficult in QGIS.
                                                                                      # Make the reprojection to 3857 in the opportunities_pipeline below
+                                                                                     # However, it's good to keep it in EPSG:4326 prior to exporting, because we can then calculate geodesic distance
     # opportunities_df = gpd.GeoDataFrame.from_dict(opportunities_dict)
     # opportunities_df_geom = gpd.GeoDataFrame.from_dict(opportunities_dict_geom)
     # opportunities_df_cloud  = gpd.GeoDataFrame.from_dict(opportunities_dict_cloud)  ## Realised that the final exports didn't include the cloud percentage, so this is a quick way of adding it back in
@@ -121,40 +122,77 @@ def order_nearest(opportunities_gdf_full):
     # clouds_sorted = gpd.GeoDataFrame(index=cloud_df.index) ## Similar to above, there is probably a faster way to do this
 
     ordered_rows = []
+    previous_end_idx = None  ## Thought it was a good idea to try to set the start location of each day as equal to the end location of the previous day
+                             ## But for simplicity, the satellite begins and ends at the same position each day, since I don't have any information on orbital speeds etc.
 
     for date, group in opportunities_gdf_full.groupby('date'):
 
         print(f"...{date}...")
+
+        start_idx = group.geometry.x.idxmax() ## Start at the easternmost side the group. 
+    
+        unvisited = set(group.index)  ## Creates a set of all of the indexes for the group 
+        route = [start_idx]           ## The imaging route list, starting with the starting index
+        unvisited.remove(start_idx)   ## Since the start idx is already in the order list, remove it from the unvisited set.
         
         # geoms_col = geoms_df[date]  ## Gives a Series representing the column of point geometries of given date
-        geoms = group.geometry.reset_index(drop=True)
+        #geoms = group.geometry.reset_index(drop=True) ## Reset_index ensures geometries stat aligned with row_order in each iteration
       
-        # coords = np.array([[geom.x, geom.y] 
-        #                    for geom in geoms_col.values ## Converts all point geometries in this column to numpy arrays [x, y] ## This is uses for the SciPy cdist method of finding the nearest points
-        #                    ])
 
-        n=len(geoms) ## Get number of items in column 
-        unvisited = set(range(n)) ## Create set of indices representing cities not imaged yet. This variable will have an item removed each time a city is imaged
-        order = [0] ## Initialise ordereded cities list
-        #current = [0]
-        unvisited.remove(0) ## Mark the starting city as already imaged by removing first item. One 
+        #n=len(geoms) ## Get number of items in column 
+        #unvisited = set(range(n)) ## Need some way to track which locations have been imaged and which haven't. List of city indexes for each iteration. 
+        #order = [0] ## List to store 
+        #unvisited.remove(0) ## Mark the starting city as already imaged by removing first item. 
 
         while unvisited:            ## The unvisited variable decreases with each loop until it is empty, at which point the while condition will be false and the loop will end 
 
+            current_idx = route[-1]   ## Get the last location visited so that the next location can be chosen
+            current_point = group.loc[current_idx].geometry  ## Get the current point geometry from the current index
+            current_coords = (current_point.y, current_point.x)  ## Getting the lat / long for geodesic distance calculation
+
+            distances = {}
+
+            ## Loop through each city in the unvisited set, calculate the geodesic distances from the current point and all other points in the group 
+
+            for idx in unvisited:
+                next_point = group.loc[idx].geometry
+                next_coords = (next_point.y, next_point.x)  # Lat / long
+
+                distance = geodesic(current_coords, next_coords).kilometers 
+                distances[idx] = distance
+
+            nearest_idx = min(distances, key=distances.get)  ## After looping through unvisited, calculate the minimum geodesic distance from current point and unvisited points
+                                                             ## to find the next point
+
+            route.append(nearest_idx)                  ## Add it to the route
+            unvisited.remove(nearest_idx)           ## Remove it from the unvisited list
+
+        
+        ordered_group = group.loc[route].copy()    ## Take the current group and order it by the idexes in route, and copy to a new group object
+        ordered_group['row_order'] = range(len(ordered_group))  ## To preserve daily order
+        ordered_rows.append(ordered_group)
+
+
+        print("Ordering complete.")
+    
+        ordered_df = pd.concat(ordered_rows, ignore_index=True)  ## Make a dataframe from the ordered rows 
+
+    return ordered_df
+
             #current_coords = coords[current]
-            current = order[-1] ## Get index of most recently added city to the ordered cities list
-            current_point = geoms.iloc[current]
+            # current = order[-1] ## Get index of most recently added city to the ordered cities list
+            # current_point = geoms.iloc[current]
 
-            distances = {
-                idx: current_point.distance(geoms.iloc[idx])        ## Creates a dictionary using for loop comprehension of distances from the current point to all other unvisited points
-                for idx in unvisited                                    ## Using Shapely
-            }
+            # distances = {
+            #     idx: current_point.distance(geoms.iloc[idx])        ## Creates a dictionary using for loop comprehension of distances from the current point to all other unvisited points
+            #     for idx in unvisited                                    ## Using Shapely
+            # }
 
-            nearest_idx = min(distances, key=distances.get)     ## Finds the index of the closest unvisited point to the current point
-            #nearest = min(distances, key=distances.get)
-            order.append(nearest_idx) ## Adds the index of the nearest city to the order list
-            unvisited.remove(nearest_idx) ## Removes the index of the current city from the unvisited variable 
-            #current = nearest
+            # nearest_idx = min(distances, key=distances.get)     ## Finds the index of the closest unvisited point to the current point
+            # #nearest = min(distances, key=distances.get)
+            # order.append(nearest_idx) ## Adds the index of the nearest city to the order list
+            # unvisited.remove(nearest_idx) ## Removes the index of the current city from the unvisited variable 
+            # #current = nearest
 
             # dists = cdist([coords[current]], coords[unvisited_list := list(unvisited)])[0] ## Calculate distances from current city to ALL unvisited cities, using cdist from SciPy
             # nearest_idx = unvisited_list[np.argmin(dists)]                                  ## coords[current] returns coords of current city
@@ -173,15 +211,9 @@ def order_nearest(opportunities_gdf_full):
         # geoms_sorted[date] = geoms_df[date].values[order]  ## Same for geoms.
         # clouds_sorted[date] = cloud_df[date].values[order] ## Same for clouds
 
-        ordered_group = group.iloc[order].copy()
-        ordered_group['row_order'] = range(len(ordered_group))
-        ordered_rows.append(ordered_group)
+            
     
-    print("Ordering complete.")
     
-    ordered_df = pd.concat(ordered_rows, ignore_index=True)
-
-    return ordered_df
 
 
 def opportunities_pipeline(start_date, window):
@@ -190,7 +222,7 @@ def opportunities_pipeline(start_date, window):
     print(cloud_df)
 
     opportunities_gdf = identify_opportunities(cloud_df, start_date, window)
-    opportunities_gdf = opportunities_gdf               ## Reproject
+    opportunities_gdf = opportunities_gdf              
     print(opportunities_gdf)
 
     opportunities_gdf_ordered = order_nearest(opportunities_gdf)
@@ -199,6 +231,7 @@ def opportunities_pipeline(start_date, window):
     print(opportunities_gdf_ordered)
 
     opportunities_gdf_ordered.to_file('./result/ordered_points_with_cities.geojson', driver="GeoJSON")
+    opportunities_gdf_ordered.to_csv('./result/ordered_points_with_cities.csv')
 
 
     connection_string = f"postgresql://docker:docker@35.242.217.121:5432/coburg_uhi"
@@ -212,6 +245,18 @@ def opportunities_pipeline(start_date, window):
     )                                           ### XXX I originally deployed this for my UHI project for the CARTO connection (mapping hot spots and cold spots), I'm just reusing it here for convenience. This is why it's called "coburg_uhi"
                                                 ### XXX I thought it would be useful to have as a persistent database so that minimal work would have to be done to generate another Map Series / Atlas in QGIS (since the data should already be linked)
 
+
+
+
+    for date, group in opportunities_gdf_ordered.groupby('date'):
+
+        date = date.strftime("%Y-%m-%d")
+        group.to_file(f'./result/{date}.geojson', driver="GeoJSON")
+
+        
+
+
+        
 
 
     #geoms_reordered.to_file('./result/geoms_reordered.geojson', driver="GeoJSON") ## To compare 
@@ -263,33 +308,5 @@ def opportunities_pipeline(start_date, window):
     # print(gdf_export.head())
 
     # gdf_export.to_file('./result/ordered_points_with_cities.geojson', driver='GeoJSON')
-
-
-   
-
-    # for date in geoms_reordered.columns:
-
-    #     gdf_date = gpd.GeoDataFrame({
-    #         'row_order':range(len(geoms_reordered)),
-    #         'city':cities_reordered[date].values,
-    #         'cloud_cover':clouds_reordered[date].values,
-    #         'geometry':geoms_reordered[date].values,
-    #     }, crs="EPSG:4326")
-
-    #     #date = str(date)
-    #     #date = datetime.fromtimestamp(date)
-    #     #date = date.rstrip(" ")
-    #     #date = date.strftime("%Y-%m-%d")
-    #     date = date.date()
-
-    #     filename = f'ordered_points_{date}.geojson'
-    #     output_path = f"./result/{filename}"
-
-    #     gdf_date.to_file(output_path, driver="GeoJSON")
-
-        
-
-
-
 
 

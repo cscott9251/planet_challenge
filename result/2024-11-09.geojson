@@ -1,0 +1,15 @@
+{
+"type": "FeatureCollection",
+"name": "2024-11-09",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "date": "2024-11-09", "city": "Dhaka", "cloud_cover": 0.0, "pop_max": 12797394, "row_order": 0 }, "geometry": { "type": "Point", "coordinates": [ 90.4066336, 23.7250056 ] } },
+{ "type": "Feature", "properties": { "date": "2024-11-09", "city": "Kolkata", "cloud_cover": 2.0416667, "pop_max": 14787000, "row_order": 1 }, "geometry": { "type": "Point", "coordinates": [ 88.369125504438856, 22.569578883795778 ] } },
+{ "type": "Feature", "properties": { "date": "2024-11-09", "city": "Delhi", "cloud_cover": 2.4166667, "pop_max": 15926000, "row_order": 2 }, "geometry": { "type": "Point", "coordinates": [ 77.2280582, 28.6719388 ] } },
+{ "type": "Feature", "properties": { "date": "2024-11-09", "city": "Lahore", "cloud_cover": 0.083333336, "pop_max": 6577000, "row_order": 3 }, "geometry": { "type": "Point", "coordinates": [ 74.3480789, 31.5619174 ] } },
+{ "type": "Feature", "properties": { "date": "2024-11-09", "city": "Karachi", "cloud_cover": 13.916667, "pop_max": 12130000, "row_order": 4 }, "geometry": { "type": "Point", "coordinates": [ 66.9880631, 24.8719381 ] } },
+{ "type": "Feature", "properties": { "date": "2024-11-09", "city": "Mumbai", "cloud_cover": 0.125, "pop_max": 18978000, "row_order": 5 }, "geometry": { "type": "Point", "coordinates": [ 72.875839397265295, 19.06840847529168 ] } },
+{ "type": "Feature", "properties": { "date": "2024-11-09", "city": "New York", "cloud_cover": 7.25, "pop_max": 19040000, "row_order": 6 }, "geometry": { "type": "Point", "coordinates": [ -73.995717543616976, 40.721561749727663 ] } },
+{ "type": "Feature", "properties": { "date": "2024-11-09", "city": "Los Angeles", "cloud_cover": 0.0, "pop_max": 12500000, "row_order": 7 }, "geometry": { "type": "Point", "coordinates": [ -118.231986472233174, 34.049219260337075 ] } }
+]
+}
