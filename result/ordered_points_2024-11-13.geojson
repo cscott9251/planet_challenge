@@ -1,0 +1,15 @@
+{
+"type": "FeatureCollection",
+"name": "ordered_points_2024-11-13",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "row_order": 0, "city": "Delhi", "cloud_cover": 0.0 }, "geometry": { "type": "Point", "coordinates": [ 77.2280582, 28.6719388 ] } },
+{ "type": "Feature", "properties": { "row_order": 1, "city": "Mumbai", "cloud_cover": 3.4166667 }, "geometry": { "type": "Point", "coordinates": [ 72.875839397265295, 19.06840847529168 ] } },
+{ "type": "Feature", "properties": { "row_order": 2, "city": "Karachi", "cloud_cover": 0.16666667 }, "geometry": { "type": "Point", "coordinates": [ 66.9880631, 24.8719381 ] } },
+{ "type": "Feature", "properties": { "row_order": 3, "city": "Dhaka", "cloud_cover": 8.625 }, "geometry": { "type": "Point", "coordinates": [ 90.4066336, 23.7250056 ] } },
+{ "type": "Feature", "properties": { "row_order": 4, "city": "Osaka", "cloud_cover": 11.333333 }, "geometry": { "type": "Point", "coordinates": [ 135.503754190062324, 34.691095244477914 ] } },
+{ "type": "Feature", "properties": { "row_order": 5, "city": "Buenos Aires", "cloud_cover": 5.8333335 }, "geometry": { "type": "Point", "coordinates": [ -58.432512687664257, -34.610714591392551 ] } },
+{ "type": "Feature", "properties": { "row_order": 6, "city": "New York", "cloud_cover": 0.33333334 }, "geometry": { "type": "Point", "coordinates": [ -73.995717543616976, 40.721561749727663 ] } },
+{ "type": "Feature", "properties": { "row_order": 7, "city": "Los Angeles", "cloud_cover": 3.875 }, "geometry": { "type": "Point", "coordinates": [ -118.231986472233174, 34.049219260337075 ] } }
+]
+}

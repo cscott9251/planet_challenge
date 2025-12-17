@@ -1,0 +1,11 @@
+Known nbextensions:
+  config dir: /home/chris/projects/UHI_/notebooks/.jnotebook/etc/jupyter/nbconfig
+    notebook section
+      nbextensions_configurator/config_menu/main [32m enabled [0m
+      contrib_nbextensions_help_item/main [32m enabled [0m
+    tree section
+      nbextensions_configurator/tree_tab/main [32m enabled [0m
+  config dir: /home/chris/.jupyter/nbconfig
+    notebook section
+      varInspector/main [32m enabled [0m
+      nbextension-scratchpad/main [32m enabled [0m

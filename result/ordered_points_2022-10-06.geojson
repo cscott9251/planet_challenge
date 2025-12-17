@@ -1,0 +1,15 @@
+{
+"type": "FeatureCollection",
+"name": "ordered_points_2022-10-06",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "row_order": 0, "city": "Tehran" }, "geometry": { "type": "Point", "coordinates": [ 51.4223982, 35.6738886 ] } },
+{ "type": "Feature", "properties": { "row_order": 1, "city": "Karachi" }, "geometry": { "type": "Point", "coordinates": [ 66.9880631, 24.8719381 ] } },
+{ "type": "Feature", "properties": { "row_order": 2, "city": "Lahore" }, "geometry": { "type": "Point", "coordinates": [ 74.3480789, 31.5619174 ] } },
+{ "type": "Feature", "properties": { "row_order": 3, "city": "Beijing" }, "geometry": { "type": "Point", "coordinates": [ 116.394200892606108, 39.901720309862675 ] } },
+{ "type": "Feature", "properties": { "row_order": 4, "city": "Tianjin" }, "geometry": { "type": "Point", "coordinates": [ 117.196607282088308, 39.082771761979693 ] } },
+{ "type": "Feature", "properties": { "row_order": 5, "city": "Cairo" }, "geometry": { "type": "Point", "coordinates": [ 31.2480224, 30.0519062 ] } },
+{ "type": "Feature", "properties": { "row_order": 6, "city": "London" }, "geometry": { "type": "Point", "coordinates": [ -0.1186677, 51.5019406 ] } },
+{ "type": "Feature", "properties": { "row_order": 7, "city": "New York" }, "geometry": { "type": "Point", "coordinates": [ -73.995717543616976, 40.721561749727663 ] } }
+]
+}
