@@ -6,15 +6,15 @@ Program will not run without Postgres database username, password, and the publi
 I have omitted these from find_best_opportunity.py in line with security best practices. I can provide these if required, please just ask.
 
 ```bash
-git clone https://github.com/cscott9251/planet_challenge.git
+$ git clone https://github.com/cscott9251/planet_challenge.git
 ```
 
 From the root of the cloned directory
 ```bash
-pip install -r requirements.txt
+$ pip install -r requirements.txt
 ```
 ```bash
-pip install -e .
+$ pip install -e .
 ```
 To run the program, simply run type:
 ```bash
