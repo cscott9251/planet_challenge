@@ -18,7 +18,7 @@ From the root of the cloned directory:
 ```bash
 $ pip install -e .
 ```
-To run the program, simply run type:
+To run the program, simply type:
 ```bash
 $ planet
 ```
