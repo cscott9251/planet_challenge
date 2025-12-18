@@ -40,9 +40,10 @@ Things to note:
 
 I've left some old, commented-out code instead of deleting it to show you my thought process. 
 
-I went through 2-3 different methods for performing the ordering, using different distance calculation methods / libraries etc. 
-When I looked at the points in QGIS I realised that using a simple nearest-neighbour calculation was resulting in imaging route switching direction, 
-i.e. going towards east for a few locations and then selecting a location that was actually back west.
+I went through 2-3 different methods for performing the ordering, using different distance calculation methods / libraries etc.
+When I looked at the points in QGIS I realised that using a simple nearest-neighbour calculation (SciPy CDist or Shapely nearest()) 
+was resulting in imaging route switching direction, i.e. going towards east for a few locations and then selecting a location that was actually back west 
+(becasue that locationed happened to be nearest in terms of absolute distance).
 I realised that this was because the loop was simply selecting the nearest point with no accounting for direction or starting position. 
 So I changed the logic to specify a starting position and to use the geopy package to calculate the next nearest geodesic (instead of 2D) distance.
 Since the original Shapefile data was in EPSG:4326, which uses degrees as a unit, geodesic calculation is straightforward. 
@@ -82,10 +83,15 @@ def identify_opportunities(cloud_df, start_date, window):
     #opportunities_list = []
 
     # opportunities_dict = defaultdict(list)
-    # opportunities_dict_geom = defaultdict(list)        ## Found this library when I was searching for ways to use a dictionary whose keys are not known yet in a loop
+    # opportunities_dict_geom = defaultdict(list)        ## XXX Found this library when I was searching for ways to use a dictionary whose keys are not known yet in a loop
     # opportunities_dict_cloud = defaultdict(list)       ## This is because in the foor loop below, I wanted to update / append a new Dataframe in every iteration with the 8 cities corresponding to the 
     #                                                     ## 8 smallest values for cloud cover, but Dataframes and GeoDataframes do not have a reliable append method (the opinion of a few people on StackExchange)
-                                                        ## So I had the idea to store the values in a dictionary, adding a new key in each iteration corresponding to the date, and 
+                                                        ## So I had the idea to store the values in a dictionary, adding a new key in each iteration corresponding to the date, creating the keys on the fly.
+
+                                                        ## I thought it would save time / typing, but this method of creating a separate dictionary for each label locked me into having to create separate dataframes for each label
+                                                        ## and having to implement annoying, convoluted logic to stack() each dataframe into a columnar shape, and then explicitly combining all of the 
+                                                        # stacked GeoDataframes into a single GeoDataframe, manually defining the columns by referencing the stacked GeoDataframes etc.
+                                                        # This was very onerous, so I decided to just create a dictionary with the labels as keys and values as lists 
     ## Loop through each date in the time window
 
 
@@ -99,18 +105,21 @@ def identify_opportunities(cloud_df, start_date, window):
     }
 
 
-    for i in range(window):
+    for i in range(window):         ## Loop through each day
 
         date_i = date1 + timedelta(days=i)
         print(f"...{date_i}...")
-        indexlist = list(cloud_df[date_i].nsmallest(8).index) ## Select the 8 lowest values of cloud cover.
+        indexlist = list(cloud_df[date_i].nsmallest(8).index) ## Select the indexes corresponding to the 8 lowest values of cloud cover.
         print(cloud_df[date_i].nsmallest(8))
 
-        for list_idx, city_idx in enumerate(indexlist):
+        for list_idx, city_idx in enumerate(indexlist):         ## Loop through rows corresponding to the 8 smallest cloud cover values 
 
             city = cloud_df.at[city_idx, 'city_name'] 
             # print(city)
-            exists = any(city in lst for lst in opportunities_dict.values())
+            exists = any(city in lst for lst in opportunities_dict.values())  # Was searching for a way to loop through a dictionary which had lists as its values
+                                                                                # and found this fancy, if a little unreadable method, which takes the current city,
+                                                                                # and searches for it within the dictionary to see if it exists. If it exists, the any()
+                                                                                # builtin method returns True 
             
             if exists:
 
@@ -125,12 +134,12 @@ def identify_opportunities(cloud_df, start_date, window):
             # opportunities_dict_cloud[date_i].append(cloud_df.at[city_idx, date_i])      ### XXX There is probably a faster way to do this other than splitting up the columns like this, but I didn't want to rewrite my code too much!
             
             opportunities_dict['date'].append(date_i)
-            opportunities_dict['city'].append(str(cloud_df.at[city_idx, 'city_name']))
-            opportunities_dict['geometry'].append(cloud_df.at[city_idx, 'geometry'])
-            opportunities_dict['cloud_cover'].append(cloud_df.at[city_idx, date_i])
+            opportunities_dict['city'].append(str(cloud_df.at[city_idx, 'city_name']))      ## Still have to manually append (or can implement a loop through the dict keys)
+            opportunities_dict['geometry'].append(cloud_df.at[city_idx, 'geometry'])        ## but at least we don't have to manually stack() with multiple GeoDataframes
+            opportunities_dict['cloud_cover'].append(cloud_df.at[city_idx, date_i])         ## and can keep all columns labels in one GeoDataframe
             opportunities_dict['pop_max'].append(cloud_df.at[city_idx, 'pop_max'])
-            opportunities_dict['row_order'].append(list_idx)                        ## This is needed to record the order of imaging. 
-
+            opportunities_dict['row_order'].append(list_idx)                        ## This is needed to record the order of imaging. Dictionaries do not natively respect order / indexes like Dataframes
+                                                                                    ## There might be a better way to do this
     
     opprtunities_gdf_full = gpd.GeoDataFrame(opportunities_dict, crs="EPSG:4326")  # Can keep to using one GeoDataframe instead of one for each field(!). Ensure that originale Shapefile CRS is specified.
     #opprtunities_gdf_full = opprtunities_gdf_full.to_crs("EPSG:3857")               # And specify QGIS CRS. The reason I'm using 3857 is because the unit of 4326 is degrees, which was making things difficult in QGIS.
@@ -144,7 +153,9 @@ def identify_opportunities(cloud_df, start_date, window):
 
     print(opprtunities_gdf_full)
 
-    return opprtunities_gdf_full
+    return opprtunities_gdf_full        ## With the previous defaultdict / stack() method, a separate gdf has to be defined for each label, which necessitated
+                                        ## a separate gdf to be returned, which made the number of params / returs a bit convoluted. So changed the method to one 
+                                        ## that allowed a single object to be returned
 
     # for i in range(timespan):
         
@@ -160,11 +171,11 @@ def order_nearest(opportunities_gdf_full):
 
     # cities_sorted = gpd.GeoDataFrame(index=cities_df.index)
     # geoms_sorted = gpd.GeoDataFrame(index=geoms_df.index)
-    # clouds_sorted = gpd.GeoDataFrame(index=cloud_df.index) ## Similar to above, there is probably a faster way to do this
+    # clouds_sorted = gpd.GeoDataFrame(index=cloud_df.index) ## Again, from the previous method of using stack(), had to include too many params and then tied me into manually sorting them
 
     ordered_rows = []
     previous_end_idx = None  ## Thought it was a good idea to try to set the start location of each day as equal to the end location of the previous day
-                             ## But for simplicity, the satellite begins and ends at the same position each day, since I don't have any information on orbital speeds etc.
+                             ## But for simplicity, assume the satellite begins and ends at the same position each day, since I don't have any information on orbital speeds etc.
 
     for date, group in opportunities_gdf_full.groupby('date'):
 
@@ -172,13 +183,13 @@ def order_nearest(opportunities_gdf_full):
 
         start_idx = group.geometry.x.idxmax() ## Start at the easternmost side the group. 
     
-        unvisited = set(group.index)  ## Creates a set of all of the indexes for the group 
+        unvisited = set(group.index)  ## Creates a set of all of the indexes for the group, following the same logic as the exists logic above 
         route = [start_idx]           ## The imaging route list, starting with the starting index
         unvisited.remove(start_idx)   ## Since the start idx is already in the order list, remove it from the unvisited set.
         
         # geoms_col = geoms_df[date]  ## Gives a Series representing the column of point geometries of given date
         #geoms = group.geometry.reset_index(drop=True) ## Reset_index ensures geometries stat aligned with row_order in each iteration
-      
+
 
         #n=len(geoms) ## Get number of items in column 
         #unvisited = set(range(n)) ## Need some way to track which locations have been imaged and which haven't. List of city indexes for each iteration. 
@@ -187,20 +198,21 @@ def order_nearest(opportunities_gdf_full):
 
         while unvisited:            ## The unvisited variable decreases with each loop until it is empty, at which point the while condition will be false and the loop will end 
 
-            current_idx = route[-1]   ## Get the last location visited so that the next location can be chosen
+            current_idx = route[-1]   ## Get the latest location in the route (last/end index in the route list) so that its geom / coords can be extracted
             current_point = group.loc[current_idx].geometry  ## Get the current point geometry from the current index
             current_coords = (current_point.y, current_point.x)  ## Getting the lat / long for geodesic distance calculation
 
-            distances = {}
+            distances = {}      # Initialise the dictionary which will contain the distances from the current point to all other points for that date / day
+                                # with the keys as the indexes of those points, the the values as the actual distances
 
             ## Loop through each city in the unvisited set, calculate the geodesic distances from the current point and all other points in the group 
 
             for idx in unvisited:
-                next_point = group.loc[idx].geometry
-                next_coords = (next_point.y, next_point.x)  # Lat / long
+                next_point = group.loc[idx].geometry  ## Extract geom of current idx in the unvisited set
+                next_coords = (next_point.y, next_point.x)  # Extract Lat / long
 
-                distance = geodesic(current_coords, next_coords).kilometers 
-                distances[idx] = distance
+                distance = geodesic(current_coords, next_coords).kilometers   ## Calculate GEODESIC distance using geopy instead of the previous nearest neighbour / Euclidean 2D methods
+                distances[idx] = distance   ## Add distance to distance between current (unvisited) pont and next point dictionary, creating a new key containing the index
 
             nearest_idx = min(distances, key=distances.get)  ## After looping through unvisited, calculate the minimum geodesic distance from current point and unvisited points
                                                              ## to find the next point
@@ -276,8 +288,8 @@ def opportunities_pipeline(start_date, window):
     opportunities_gdf_ordered.to_file('./result/ordered_points_with_cities.geojson', driver="GeoJSON")
     opportunities_gdf_ordered.to_csv('./result/ordered_points_with_cities.csv')
 
-
-    connection_string = f"postgresql://${PGUSER}:${PGPASS}@${VM_IP}:5432/coburg_uhi"
+    
+    connection_string = f"postgresql://${PGUSER}:${PGPASS}@${VM_IP}:5432/coburg_uhi" ## Redacted in line with security best practices
     engine = create_engine(connection_string)
 
     opportunities_gdf_ordered.to_postgis(       ### XXX Upload GeoDataframe directly as a new table to my previously deployed Postgres with PostGIS database

@@ -30,6 +30,8 @@ from planet_challenge.geocode import geocoded_cities_pipeline
 This module queries the free Open Meteo Historical Weather API, returning the total cloud cover for each given city.
 Some logic was adapted from the Open Meteo website for use in the loop.
 
+TODO reword the below paragraph to be clearer
+
 The top 40 cities in terms of population are imported from geocode.py and passed to the get_cloud_covers() pipeline.
 The function loops through each row in the GeoDataframe, extracts the latitude and longitude from the geometry column,
 and passes these to the API, as well as passing it the specified start date end date (calculated from time window).
@@ -38,14 +40,21 @@ This is then resampled to daily using the Pandas resample() method, chained with
 cloud cover, reconciling the column dimensions in the proces (i.e. each day corresponding to a single value, the average).
 The data is then transposed so that the dates are the column headers instead of values in a column.
 
+For each iteration: 
 
-Then, the current row from the cities GeoDataframe is merged with the dataframe containing its cloud cover valurs over the days,
-and the merged dataframe is appended to a list of dataframes, which gets updated with every iteration until it is a complete list
-of dataframes, each dataframe containing a single row of cloud covers and city information.
+A dataframe is created with the cloud cover values for each of the days as the single row,
+and the 7 dates as column headers.
 
-Finally, after the loop completes, the list of dataframes is concatenated via Panda's concat() method into a single dataframe. 
+The current row from the cities GeoDataframe is copied into a new GeoDataframe (city_row).
 
-These functions are chained via a pipeline. 
+Both merged into a temporary GeoDataframe, containing the city and cloud cover information.
+
+The merged dataframe is appended to a list of dataframes, which gets updated in every iteration until it is a complete list
+of merged temporary dataframes, each dataframe containing a single row of cloud covers and city information.
+
+Finally, after the loop completes, the list of dataframes is concatenated via Panda's concat() method into a single, complete dataframe. 
+
+The functions performing the above tasks are chained via a 2-step pipeline. 
 
 Notes:
 
@@ -58,7 +67,8 @@ TODO:
  
 Add logic to test whether input date is in the future, and route the query to the Open Meteo Forecast API instead. This would be relatively simple.
 
-Check cloud cover values given by this service against other similar services. 
+Check cloud cover values given by this service against other similar services 
+(there are some small and large discrepancies with results given by this API and )
 """
 
 
