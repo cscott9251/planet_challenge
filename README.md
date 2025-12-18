@@ -23,7 +23,7 @@ $ planet
 This will run the opportunity selection pipelines for the period 2024-11-07 - 2024-11-13 by default.
 Or, the start date can be specified:
 ```bash
-$ planet ["start date in YYYY-MM-DD format"]
+$ planet "<start date in YYYY-MM-DD format>"
 ```
 Or, from the src/planet_challenge directory:
 ```bash
