@@ -5,7 +5,7 @@ import geopandas as gpd
 from sqlalchemy import create_engine
 from geopy.distance import geodesic
 
-#from pathlib import Path 
+from pathlib import Path 
 from datetime import datetime, timedelta
 #import time
 #from collections import defaultdict
@@ -265,11 +265,13 @@ def order_nearest(opportunities_gdf_full):
         # clouds_sorted[date] = cloud_df[date].values[order] ## Same for clouds
 
             
-    
-    
+
 
 
 def opportunities_pipeline(start_date, window):
+
+    result_dir = Path('./result')
+    result_dir.mkdir(parents=True, exist_ok=True)
      
     cloud_df = cloud_covers_pipeline(start_date, window)
 
@@ -285,8 +287,8 @@ def opportunities_pipeline(start_date, window):
 
     print(opportunities_gdf_ordered)
 
-    opportunities_gdf_ordered.to_file('./result/ordered_points_with_cities.geojson', driver="GeoJSON")
-    opportunities_gdf_ordered.to_csv('./result/ordered_points_with_cities.csv')
+    opportunities_gdf_ordered.to_file(result_dir / 'ordered_points_with_cities.geojson', driver="GeoJSON")
+    opportunities_gdf_ordered.to_csv(result_dir / 'result/ordered_points_with_cities.csv')
 
     
     connection_string = f"postgresql://${PGUSER}:${PGPASS}@${VM_IP}:5432/coburg_uhi" ## Redacted in line with security best practices
@@ -306,7 +308,7 @@ def opportunities_pipeline(start_date, window):
     for date, group in opportunities_gdf_ordered.groupby('date'):
 
         date = date.strftime("%Y-%m-%d")
-        group.to_file(f'./result/{date}.geojson', driver="GeoJSON")
+        group.to_file(result_dir / f'{date}.geojson', driver="GeoJSON")
 
         
 
