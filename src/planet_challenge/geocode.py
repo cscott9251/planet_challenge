@@ -58,7 +58,7 @@ column of the Shapefile.
 
 # geolocator = GoogleV3(api_key="<XXX>",
 #                     client_id="<XXX>", 
-#                     secret_key="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")
+#                     secret_key="<XXX>")
     
 
 
@@ -147,7 +147,7 @@ def geocoded_cities_pipeline():
 def extract_coords(cities_gdf):
 
 
-    gmaps = googlemaps.Client(key="AIzaSyCpw_ThiNdXC9hFiSt0HeP7CMrIdzoY0II")
+    gmaps = googlemaps.Client(key="<XXX>")
 
     for idx in cities_gdf.index:
 
