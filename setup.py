@@ -22,6 +22,7 @@ setup(
         "scipy",
         "Shapely",
         "SQLAlchemy",
+        "geopy"
      ],
      
      entry_points={

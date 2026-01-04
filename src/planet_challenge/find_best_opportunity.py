@@ -44,6 +44,7 @@ I went through 2-3 different methods for performing the ordering, using differen
 When I looked at the points in QGIS I realised that using a simple nearest-neighbour calculation (SciPy CDist or Shapely nearest()) 
 was resulting in imaging route switching direction, i.e. going towards east for a few locations and then selecting a location that was actually back west 
 (becasue that locationed happened to be nearest in terms of absolute distance).
+
 I realised that this was because the loop was simply selecting the nearest point with no accounting for direction or starting position. 
 So I changed the logic to specify a starting position and to use the geopy package to calculate the next nearest geodesic (instead of 2D) distance.
 Since the original Shapefile data was in EPSG:4326, which uses degrees as a unit, geodesic calculation is straightforward. 
@@ -107,7 +108,7 @@ def identify_opportunities(cloud_df, start_date, window):
 
     for i in range(window):         ## Loop through each day
 
-        date_i = date1 + timedelta(days=i)
+        date_i = date1 + timedelta(days=i) ## Starting at 0 is fine here, 
         print(f"...{date_i}...")
         indexlist = list(cloud_df[date_i].nsmallest(8).index) ## Select the indexes corresponding to the 8 lowest values of cloud cover.
         print(cloud_df[date_i].nsmallest(8))
@@ -291,11 +292,12 @@ def opportunities_pipeline(start_date, window):
     opportunities_gdf_ordered.to_csv(result_dir / 'result/ordered_points_with_cities.csv')
 
     
-    connection_string = f"postgresql://${PGUSER}:${PGPASS}@${VM_IP}:5432/coburg_uhi" ## Redacted in line with security best practices
+    #connection_string = f"postgresql://${PGUSER}:${PGPASS}@${VM_IP}:5432/coburg_uhi" ## Redacted in line with security best practices ## Remote
+    connection_string = f"postgresql://postgres:1234@localhost:5432/planet_challenge" ## Local
     engine = create_engine(connection_string)
 
     opportunities_gdf_ordered.to_postgis(       ### XXX Upload GeoDataframe directly as a new table to my previously deployed Postgres with PostGIS database
-    'planet_challenge',                         ### XXX Which I deployed as Docker image using a custom image I found online (https://github.com/kartoza/docker-postgis/blob/develop/docker-compose.yml)
+    'results',                         ### XXX Which I deployed as Docker image using a custom image I found online (https://github.com/kartoza/docker-postgis/blob/develop/docker-compose.yml)
     engine,                                     ### XXX I used deployment scripts to push to Artifact Registry, tie to Compute Engine, create a VM, run the Docker image (starting the Postgres server) add firewall rules, and connect with CARTO
     if_exists='replace',                        ### XXX My CARTO trial has now unfortunately expired, so I cannot use it for visualisation 
     index=False
