@@ -96,7 +96,7 @@ def get_cloud_covers(cities_gdf, start_date, window):
 	#print(date1)
 	#date1 = date1.strftime("%Y-%m-%d")
 
-	end_date = date1 + timedelta(days=window-1)
+	end_date = date1 + timedelta(days=window-1) # Because of 0 indexing 
 	date1 = date1.strftime("%Y-%m-%d")
 	end_date = end_date.strftime("%Y-%m-%d")
 
